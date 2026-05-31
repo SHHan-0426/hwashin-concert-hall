@@ -29,22 +29,42 @@
 
   /* ---- 홈: 통계 ---- */
   function renderStats() {
-    const total = VIDEOS.length;
+    const unique = new Set(VIDEOS.filter((v) => v.yt).map((v) => v.yt)).size;
     const halls = Object.keys(HALLS).length;
-    $("#stat-total").textContent = total;
+    $("#stat-total").textContent = unique;
     $("#stat-halls").textContent = halls;
   }
 
-  /* ---- 홈: 오늘의 추천 ---- */
+  /* ---- 홈: 오늘의 대표곡 (2곡 랜덤 + 셔플) ---- */
   function renderFeatured() {
-    // 실제 영상 ID가 연결된 추천작을 앞에 노출 (원래 순서는 유지)
-    const picks = VIDEOS.filter((v) => v.featured)
-      .map((v, i) => ({ v, i }))
-      .sort((a, b) => (b.v.yt ? 1 : 0) - (a.v.yt ? 1 : 0) || a.i - b.i)
-      .slice(0, 5)
-      .map((x) => x.v);
-    $("#featured-grid").innerHTML = picks
-      .map((v) => cardHTML(v, VIDEOS.indexOf(v))).join("");
+    const pool = VIDEOS.filter((v) => v.yt && v.yt.length > 5);
+    let lastSet = new Set();
+
+    function pick2() {
+      const fresh = pool.filter((v) => !lastSet.has(v.yt));
+      const src = fresh.length >= 2 ? fresh : pool;
+      const shuffled = [...src].sort(() => Math.random() - 0.5).slice(0, 2);
+      lastSet = new Set(shuffled.map((v) => v.yt));
+      return shuffled;
+    }
+
+    function draw() {
+      const picks = pick2();
+      $("#featured-grid").innerHTML = picks
+        .map((v) => cardHTML(v, VIDEOS.indexOf(v))).join("");
+    }
+
+    draw();
+
+    $("#shuffle-btn").addEventListener("click", function () {
+      draw();
+      const icon = this.querySelector(".sh-icon");
+      if (icon) {
+        icon.style.transition = "transform .4s";
+        icon.style.transform = "rotate(360deg)";
+        setTimeout(() => { icon.style.transform = ""; icon.style.transition = ""; }, 420);
+      }
+    });
   }
 
   /* ---- 홀 입장 카드 ---- */
@@ -55,7 +75,7 @@
           <span class="deco">♪</span>
           <span class="no">${esc(h.no)}</span>
           <h3>${esc(h.name)}</h3>
-          <span class="quote">“${esc(h.sub)}”</span>
+          <span class="quote">"${esc(h.sub)}"</span>
           <span class="d">${esc(h.desc)} · 영상 ${n}편</span>
           <span class="enter">입장하기 →</span>
         </a>`;
@@ -80,7 +100,7 @@
             <div>
               <div class="no">${esc(h.no)}</div>
               <h2>${esc(h.name)}</h2>
-              <div class="q">“${esc(h.sub)}”</div>
+              <div class="q">"${esc(h.sub)}"</div>
             </div>
             <div class="cnt">${esc(h.desc)}<br>총 ${vids.length}편</div>
           </div>
@@ -88,23 +108,63 @@
           <div class="grid" id="grid-${key}">
             ${vids.map((v) => cardHTML(v, VIDEOS.indexOf(v))).join("")}
           </div>
+          <div class="expand-row">
+            <button class="expand-btn" id="expand-${key}" data-hall="${key}">전체 보기 ▼</button>
+          </div>
         </div>
       </section>`;
     });
     host.innerHTML = html;
 
-    /* 서브 탭 필터 */
-    $$(".group-tabs").forEach((tabbar) => {
-      tabbar.addEventListener("click", (e) => {
-        const btn = e.target.closest("button");
-        if (!btn) return;
-        const key = tabbar.dataset.hall, g = btn.dataset.g;
-        $$("button", tabbar).forEach((b) => b.classList.toggle("on", b === btn));
-        $$(`#grid-${key} .vcard`).forEach((c) => {
-          const v = VIDEOS[+c.dataset.idx];
-          c.style.display = (g === "all" || v.group === g) ? "" : "none";
+    /* 각 홀 : 탭 필터 + 전체 보기 */
+    Object.keys(HALLS).forEach((key) => {
+      const gridEl = $(`#grid-${key}`);
+      const expandBtn = $(`#expand-${key}`);
+      const tabbar = $(`.group-tabs[data-hall="${key}"]`);
+      let currentFilter = "all";
+      let expanded = false;
+
+      function updateGrid() {
+        const cards = $$(".vcard", gridEl);
+        let shown = 0, total = 0;
+        cards.forEach((card) => {
+          const v = VIDEOS[+card.dataset.idx];
+          const matches = (currentFilter === "all" || v.group === currentFilter);
+          if (!matches) {
+            card.hidden = true;
+          } else {
+            total++;
+            card.hidden = (!expanded && shown >= 2);
+            if (!card.hidden) shown++;
+          }
         });
-      });
+        if (expandBtn) {
+          expandBtn.style.display = total > 2 ? "" : "none";
+          expandBtn.textContent = expanded
+            ? "접기 ▲"
+            : `전체 보기 (${total}편) ▼`;
+        }
+      }
+
+      updateGrid();
+
+      if (tabbar) {
+        tabbar.addEventListener("click", (e) => {
+          const btn = e.target.closest("button");
+          if (!btn) return;
+          currentFilter = btn.dataset.g;
+          expanded = false;
+          $$("button", tabbar).forEach((b) => b.classList.toggle("on", b === btn));
+          updateGrid();
+        });
+      }
+
+      if (expandBtn) {
+        expandBtn.addEventListener("click", () => {
+          expanded = !expanded;
+          updateGrid();
+        });
+      }
     });
   }
 
@@ -218,7 +278,7 @@
     const song = $("#req-song").value.trim();
     if (!song) return;
     const list = loadGB();
-    list.unshift({ nick: "🎵 곡 신청", msg: `“${song}” 무대를 듣고 싶어요!`,
+    list.unshift({ nick: "🎵 곡 신청", msg: `"${song}" 무대를 듣고 싶어요!`,
       date: new Date().toLocaleDateString("ko-KR"), r: { like: 0, move: 0, grace: 0 } });
     saveGB(list); renderGB();
     e.target.reset();

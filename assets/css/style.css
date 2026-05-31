@@ -93,7 +93,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;letter-spacing:-.01em}
 .hero .curtain-r{right:0;transform:scaleX(-1)}
 .hero .inner{position:relative;z-index:2;padding:0 22px;max-width:880px}
 .hero .eyebrow{font-size:.66rem;letter-spacing:.32em;color:var(--gold);text-transform:uppercase;margin-bottom:16px}
-.hero h1{font-size:2.15rem;line-height:1.22;text-shadow:0 4px 30px rgba(0,0,0,.4)}
+.hero h1{font-size:1.72rem;line-height:1.28;text-shadow:0 4px 30px rgba(0,0,0,.4);word-break:keep-all}
 .hero h1 .gold{color:var(--gold)}
 .hero .lead{font-size:1rem;color:#f0e6d8;margin:20px auto 0;max-width:560px;opacity:.92}
 .hero .cta{display:flex;flex-direction:column;gap:12px;justify-content:center;margin-top:30px}
@@ -126,6 +126,33 @@ section{padding:54px 18px;position:relative;scroll-margin-top:var(--topbar)}
 
 /* ── 영상 카드 그리드 (모바일 1열) ──────────────────────────── */
 .grid{display:grid;grid-template-columns:1fr;gap:16px}
+
+/* 오늘의 대표곡 — 모바일에서도 2열 나란히 */
+#featured-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+
+/* 셔플 버튼 */
+.shuffle-wrap{text-align:center;margin-top:16px}
+.shuffle-btn{
+  background:transparent;border:1px solid var(--line);color:var(--muted);
+  padding:10px 20px;border-radius:999px;font-size:.84rem;cursor:pointer;
+  font-family:var(--sans);-webkit-tap-highlight-color:transparent;transition:.2s;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.shuffle-btn:active,.shuffle-btn:hover{border-color:var(--gold);color:var(--gold)}
+.sh-icon{display:inline-block;font-size:1rem;transition:transform .4s}
+
+/* hidden 속성이 display:flex 에 덮이지 않도록 명시 */
+.vcard[hidden]{display:none !important}
+
+/* 전체 보기 버튼 */
+.expand-row{text-align:center;margin-top:16px}
+.expand-btn{
+  background:#fff;border:1px solid var(--line);color:var(--burgundy);
+  padding:12px 28px;border-radius:999px;font-size:.88rem;font-weight:700;cursor:pointer;
+  font-family:var(--sans);-webkit-tap-highlight-color:transparent;transition:.18s;
+  box-shadow:0 2px 8px rgba(40,12,16,.06);
+}
+.expand-btn:active,.expand-btn:hover{background:var(--gold-soft);border-color:var(--gold)}
 .vcard{
   background:var(--card);border-radius:14px;overflow:hidden;cursor:pointer;
   box-shadow:0 4px 16px rgba(40,12,16,.08);border:1px solid rgba(201,168,76,.16);
@@ -274,7 +301,8 @@ section{padding:54px 18px;position:relative;scroll-margin-top:var(--topbar)}
    태블릿 이상 (min-width:600px) — 카드 2열, 가로 배치 시작
    =================================================================== */
 @media (min-width:600px){
-  .hero h1{font-size:2.8rem}
+  .hero h1{font-size:2.6rem}
+  #featured-grid{grid-template-columns:repeat(2,1fr);gap:20px;max-width:720px;margin-inline:auto}
   .hero .cta{flex-direction:row}
   .grid{grid-template-columns:repeat(2,1fr);gap:20px}
   .halls{grid-template-columns:repeat(2,1fr);gap:18px}
