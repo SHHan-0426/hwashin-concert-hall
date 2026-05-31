@@ -11,7 +11,6 @@
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   /* ---- 시드 난수 (날짜 기반, 결정론적) ---- */
-  /* 같은 날 모든 방문자가 동일한 카드를 보도록 LCG 사용 */
   function makeRng(seed) {
     let s = (seed >>> 0) || 1;
     return function () {
@@ -33,7 +32,7 @@
     return idx.map((i) => arr[i]);
   }
 
-  /* 영상 카드 1개 → HTML */
+  /* 영상 카드 1개 HTML */
   function cardHTML(v, idx) {
     const thumb = v.yt
       ? `<img src="https://i.ytimg.com/vi/${esc(v.yt)}/hqdefault.jpg" alt="${esc(v.title)}" loading="lazy"
@@ -53,16 +52,14 @@
   /* ---- 홈: 통계 ---- */
   function renderStats() {
     const unique = new Set(VIDEOS.filter((v) => v.yt).map((v) => v.yt)).size;
-    const halls = Object.keys(HALLS).length;
     $("#stat-total").textContent = unique;
-    $("#stat-halls").textContent = halls;
+    $("#stat-halls").textContent = Object.keys(HALLS).length;
   }
 
   /* ---- 홈: 오늘의 대표곡 (2곡 랜덤 + 셔플) ---- */
   function renderFeatured() {
     const pool = VIDEOS.filter((v) => v.yt && v.yt.length > 5);
     let lastSet = new Set();
-
     function pick2() {
       const fresh = pool.filter((v) => !lastSet.has(v.yt));
       const src = fresh.length >= 2 ? fresh : pool;
@@ -70,15 +67,10 @@
       lastSet = new Set(shuffled.map((v) => v.yt));
       return shuffled;
     }
-
     function draw() {
-      const picks = pick2();
-      $("#featured-grid").innerHTML = picks
-        .map((v) => cardHTML(v, VIDEOS.indexOf(v))).join("");
+      $("#featured-grid").innerHTML = pick2().map((v) => cardHTML(v, VIDEOS.indexOf(v))).join("");
     }
-
     draw();
-
     $("#shuffle-btn").addEventListener("click", function () {
       draw();
       const icon = this.querySelector(".sh-icon");
@@ -105,7 +97,7 @@
     }).join("");
   }
 
-  /* ---- 각 홀(무대) 섹션 ---- */
+  /* ---- 각 홀 섹션 ---- */
   function renderHalls() {
     const host = $("#stages");
     let html = "";
@@ -139,7 +131,6 @@
     });
     host.innerHTML = html;
 
-    /* 각 홀 : 탭 필터 + 전체 보기 */
     const hallKeys = Object.keys(HALLS);
     Object.keys(HALLS).forEach((key) => {
       const gridEl = $(`#grid-${key}`);
@@ -150,38 +141,24 @@
 
       function updateGrid() {
         const cards = $$(".vcard", gridEl);
-
-        /* 현재 필터에 맞는 카드 목록 */
         const visible = cards.filter((card) => {
           const v = VIDEOS[+card.dataset.idx];
           return (currentFilter === "all" || v.group === currentFilter);
         });
         const total = visible.length;
-
-        /* 오늘의 2편 — 날짜 + 홀 인덱스 + 필터 문자열로 시드 */
         const hallIdx = hallKeys.indexOf(key);
         const seed = dateSeed() * 10000 + hallIdx * 1000 + currentFilter.length;
         const todaySet = new Set(
           seededSample(visible, Math.min(2, total), seed).map((c) => c.dataset.idx)
         );
-
-        /* 숨김/노출 적용 */
         cards.forEach((card) => {
           const v = VIDEOS[+card.dataset.idx];
           const matches = (currentFilter === "all" || v.group === currentFilter);
-          if (!matches) {
-            card.hidden = true;
-          } else {
-            card.hidden = !expanded && !todaySet.has(card.dataset.idx);
-          }
+          card.hidden = !matches || (!expanded && !todaySet.has(card.dataset.idx));
         });
-
-        /* 버튼 갱신 */
         if (expandBtn) {
           expandBtn.style.display = total > 2 ? "" : "none";
-          expandBtn.textContent = expanded
-            ? "접기 ▲"
-            : `전체 보기 (${total}편) ▼`;
+          expandBtn.textContent = expanded ? "접기 ▲" : `전체 보기 (${total}편) ▼`;
         }
       }
 
@@ -197,28 +174,23 @@
           updateGrid();
         });
       }
-
       if (expandBtn) {
-        expandBtn.addEventListener("click", () => {
-          expanded = !expanded;
-          updateGrid();
-        });
+        expandBtn.addEventListener("click", () => { expanded = !expanded; updateGrid(); });
       }
     });
   }
 
-  /* ---- 이달의 무대 (월간 시드로 자동 2곡 선택) ---- */
+  /* ---- 이달의 무대 (월간 시드 자동 2곡) ---- */
   function renderMonthly() {
     const pool = VIDEOS.filter((v) => v.yt && v.yt.length > 5);
     const picks = seededSample(pool, 2, monthSeed() * 997 + 137);
-
     $("#m-month").textContent = MONTHLY.month;
     $("#m-theme").textContent = MONTHLY.theme;
     $("#m-comment").textContent = MONTHLY.comment;
     $("#m-grid").innerHTML = picks.map((v) => cardHTML(v, VIDEOS.indexOf(v))).join("");
   }
 
-  /* ---- 아티스트 룸: 함께한 아티스트 ---- */
+  /* ---- 아티스트 룸 ---- */
   function renderPartners() {
     const map = {};
     VIDEOS.forEach((v) => { if (v.partner) (map[v.partner] = map[v.partner] || []).push(v.title); });
@@ -259,57 +231,59 @@
   $("#modal-close").addEventListener("click", closeVideo);
   modal.addEventListener("click", (e) => { if (e.target === modal) closeVideo(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeVideo(); });
-
   document.addEventListener("click", (e) => {
     const card = e.target.closest(".vcard");
     if (card) openVideo(VIDEOS[+card.dataset.idx]);
   });
 
   /* ====================================================================
-     방명록 — Supabase 공유 또는 localStorage 로컬 (자동 전환)
+     방명록 — Firebase Realtime Database (설정 시) / localStorage (폴백)
      ==================================================================== */
-  const GB_KEY = "hwashin_guestbook_v1";
-  const SB = (typeof SUPABASE_URL !== "undefined" && SUPABASE_URL &&
-              typeof SUPABASE_ANON_KEY !== "undefined" && SUPABASE_ANON_KEY)
-    ? { url: SUPABASE_URL.replace(/\/$/, ""), key: SUPABASE_ANON_KEY }
+  const FB = (typeof FIREBASE_DB_URL !== "undefined" && FIREBASE_DB_URL)
+    ? FIREBASE_DB_URL.replace(/\/$/, "")
     : null;
 
-  /* Supabase REST 호출 헬퍼 */
-  function sbFetch(path, opts) {
-    return fetch(SB.url + path, Object.assign({}, opts, {
-      headers: Object.assign({
-        "apikey": SB.key,
-        "Authorization": "Bearer " + SB.key,
-        "Content-Type": "application/json"
-      }, (opts && opts.headers) || {})
-    }));
-  }
+  const GB_KEY = "hwashin_guestbook_v1";
+  const REACT_KEY = "hwashin_gb_reacts";
 
-  /* localStorage 로드/저장 */
+  /* localStorage 헬퍼 */
   const loadLocal = () => { try { return JSON.parse(localStorage.getItem(GB_KEY)) || []; } catch { return []; } };
   const saveLocal = (a) => localStorage.setItem(GB_KEY, JSON.stringify(a));
 
   /* 날짜 포맷 */
-  function fmtDate(val) {
-    const d = val ? new Date(val) : new Date();
+  function fmtDate(iso) {
+    const d = iso ? new Date(iso) : new Date();
     return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
   }
 
-  /* 방명록 항목 HTML */
-  function gbItemHTML(item, i) {
+  /* 반응 가져오기 */
+  function getReact(id) {
+    const r = JSON.parse(localStorage.getItem(REACT_KEY) || "{}");
+    return r[id] || { like: 0, move: 0, grace: 0 };
+  }
+  function setReact(id, type) {
+    const r = JSON.parse(localStorage.getItem(REACT_KEY) || "{}");
+    r[id] = r[id] || { like: 0, move: 0, grace: 0 };
+    r[id][type] = (r[id][type] || 0) + 1;
+    localStorage.setItem(REACT_KEY, JSON.stringify(r));
+    return r[id];
+  }
+
+  /* 항목 HTML */
+  function gbHTML(item, i) {
+    const id = esc(String(item._key || item.id || i));
     const nick = esc(item.nickname || item.nick || "익명의 관객");
     const msg = esc(item.message || item.msg || "");
     const date = esc(item.created_at ? fmtDate(item.created_at) : (item.date || ""));
-    const likes = item.r ? (item.r.like || 0) : 0;
-    const move  = item.r ? (item.r.move  || 0) : 0;
-    const grace = item.r ? (item.r.grace || 0) : 0;
-    return `<div class="gb-item" data-id="${esc(item.id || i)}">
+    const rk = item._key || String(i);
+    const react = getReact(rk);
+    return `<div class="gb-item" data-id="${id}" data-key="${esc(rk)}">
         <div class="top"><span class="nick">${nick}</span><span class="date">${date}</span></div>
         <div class="msg">${msg}</div>
-        <div class="react" data-i="${i}">
-          <button data-r="like">👏 <span>${likes}</span></button>
-          <button data-r="move">🥹 <span>${move}</span></button>
-          <button data-r="grace">🙏 <span>${grace}</span></button>
+        <div class="react">
+          <button data-r="like">👏 <span>${react.like}</span></button>
+          <button data-r="move">🥹 <span>${react.move}</span></button>
+          <button data-r="grace">🙏 <span>${react.grace}</span></button>
         </div>
       </div>`;
   }
@@ -321,41 +295,51 @@
       host.innerHTML = `<div class="gb-empty">첫 번째 감상을 남겨주세요. 당신의 한 줄이 이 공연장을 채웁니다. ♪</div>`;
       return;
     }
-    host.innerHTML = list.map((g, i) => gbItemHTML(g, i)).join("");
+    host.innerHTML = list.map((g, i) => gbHTML(g, i)).join("");
   }
 
-  /* 목록 불러오기 */
+  /* 방명록 로드 */
   async function loadGB() {
-    if (SB) {
+    if (FB) {
       try {
-        const r = await sbFetch("/rest/v1/guestbook?select=*&order=created_at.desc&limit=50");
+        const r = await fetch(FB + "/guestbook.json");
         if (r.ok) {
-          const items = await r.json();
-          /* 로컬 반응 병합 */
-          const localReacts = JSON.parse(localStorage.getItem("hwashin_gb_reacts") || "{}");
-          items.forEach((it) => { it.r = localReacts[it.id] || { like: 0, move: 0, grace: 0 }; });
-          renderGB(items);
+          const data = await r.json();
+          if (data && typeof data === "object") {
+            /* Firebase는 {key: item} 객체로 반환 → 배열로 변환 후 최신순 정렬 */
+            const items = Object.entries(data)
+              .map(([k, v]) => Object.assign({}, v, { _key: k }))
+              .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+              .slice(0, 50);
+            renderGB(items);
+          } else {
+            renderGB([]);
+          }
           return;
         }
-      } catch (e) { /* fallback */ }
+      } catch (e) { /* 네트워크 오류 시 로컬로 폴백 */ }
     }
     renderGB(loadLocal());
   }
 
-  /* 새 항목 저장 */
-  async function saveGB(nick, msg) {
-    if (SB) {
+  /* 방명록 저장 */
+  async function postGB(nick, msg) {
+    if (FB) {
       try {
-        const r = await sbFetch("/rest/v1/guestbook", {
+        const r = await fetch(FB + "/guestbook.json", {
           method: "POST",
-          headers: { "Prefer": "return=representation" },
-          body: JSON.stringify({ nickname: nick, message: msg })
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nickname: nick,
+            message: msg,
+            created_at: new Date().toISOString()
+          })
         });
         if (r.ok) {
-          await loadGB();
+          await loadGB(); /* 저장 후 목록 새로고침 */
           return true;
         }
-      } catch (e) { /* fallback */ }
+      } catch (e) { /* 폴백 */ }
     }
     /* localStorage 폴백 */
     const list = loadLocal();
@@ -365,31 +349,7 @@
     return true;
   }
 
-  /* 반응 — 항상 로컬 저장 (Supabase 없이도 동작) */
-  function updateReact(i, r) {
-    if (SB) {
-      /* Supabase 모드: 반응을 로컬에 저장 */
-      const items = $$(".gb-item");
-      const id = items[i] && items[i].dataset.id;
-      if (id) {
-        const reacts = JSON.parse(localStorage.getItem("hwashin_gb_reacts") || "{}");
-        reacts[id] = reacts[id] || { like: 0, move: 0, grace: 0 };
-        reacts[id][r] = (reacts[id][r] || 0) + 1;
-        localStorage.setItem("hwashin_gb_reacts", JSON.stringify(reacts));
-        /* 버튼 카운터 바로 갱신 */
-        const btn = items[i].querySelector(`[data-r="${r}"] span`);
-        if (btn) btn.textContent = reacts[id][r];
-      }
-    } else {
-      const list = loadLocal();
-      list[i].r = list[i].r || {};
-      list[i].r[r] = (list[i].r[r] || 0) + 1;
-      saveLocal(list);
-      renderGB(list);
-    }
-  }
-
-  /* 폼 이벤트 */
+  /* 폼 제출 */
   $("#gb-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const nick = $("#gb-nick").value.trim() || "익명의 관객";
@@ -397,18 +357,22 @@
     if (!msg) { toast("감상 한 줄을 적어주세요."); return; }
     const btn = e.target.querySelector("button[type=submit]");
     if (btn) { btn.disabled = true; btn.textContent = "저장 중…"; }
-    await saveGB(nick, msg);
+    await postGB(nick, msg);
     e.target.reset();
     if (btn) { btn.disabled = false; btn.textContent = "방명록에 남기기 ♪"; }
     toast("소중한 감상 감사합니다 ♪");
   });
 
+  /* 반응 버튼 — 로컬 저장 + 화면 즉시 반영 */
   $("#gb-list").addEventListener("click", (e) => {
-    const btn = e.target.closest("button");
+    const btn = e.target.closest("[data-r]");
     if (!btn) return;
-    const reactEl = btn.closest(".react");
-    if (!reactEl) return;
-    updateReact(+reactEl.dataset.i, btn.dataset.r);
+    const item = btn.closest(".gb-item");
+    if (!item) return;
+    const key = item.dataset.key;
+    const type = btn.dataset.r;
+    const updated = setReact(key, type);
+    btn.querySelector("span").textContent = updated[type];
   });
 
   /* 곡 신청 */
@@ -416,20 +380,19 @@
     e.preventDefault();
     const song = $("#req-song").value.trim();
     if (!song) return;
-    await saveGB("🎵 곡 신청", `"${song}" 무대를 듣고 싶어요!`);
+    await postGB("🎵 곡 신청", `"${song}" 무대를 듣고 싶어요!`);
     e.target.reset();
     toast("신청이 방명록에 등록되었습니다. 운영자가 확인합니다 ♪");
   });
 
-  /* ---- 공유 ---- */
+  /* ---- SNS 공유 ---- */
   $("#share-row").addEventListener("click", (e) => {
     const btn = e.target.closest("button"); if (!btn) return;
     const url = location.href.split("#")[0];
     const text = "소프라노 진화신의 디지털 공연장 — Hwashin Jin Concert Hall";
     const type = btn.dataset.share;
     if (type === "copy") {
-      navigator.clipboard?.writeText(url).then(() => toast("링크가 복사되었습니다 ♪"),
-        () => toast(url));
+      navigator.clipboard?.writeText(url).then(() => toast("링크가 복사되었습니다 ♪"), () => toast(url));
     } else if (type === "kakao") {
       window.open("https://sharer.kakao.com/talk/friends/picker/link?url=" + encodeURIComponent(url), "_blank");
     } else if (type === "fb") {
@@ -449,10 +412,9 @@
     toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
   }
 
-  /* ---- 네비 동작 ---- */
+  /* ---- 네비 ---- */
   const topbar = $("#topbar");
   window.addEventListener("scroll", () => topbar.classList.toggle("solid", window.scrollY > 40));
-
   const tabs = $$("#tabbar a");
   const secOrder = ["top", "halls", "artist", "monthly", "guest"];
   const secEls = { top: $("#top"), halls: $("#halls"), artist: $("#artist"), monthly: $("#monthly"), guest: $("#guest") };
@@ -473,5 +435,5 @@
   renderHalls();
   renderMonthly();
   renderPartners();
-  loadGB();  /* async — Supabase 또는 localStorage */
+  loadGB();
 })();

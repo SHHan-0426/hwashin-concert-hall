@@ -181,21 +181,7 @@ const MONTHLY = {
   comment: "신록의 계절, 진화신의 목소리로 초여름을 맞이합니다. 이 달의 두 무대는 매월 자동으로 새로 선정됩니다."
 };
 
-/* ── Supabase 방명록 설정 ───────────────────────────────────── */
-/*
-  방문자 간 방명록 공유를 원하면 아래 두 값을 채우세요.
-  1. https://supabase.com 무료 가입 → 새 프로젝트 생성
-  2. SQL Editor에서 아래 실행:
-     create table guestbook (
-       id bigint generated always as identity primary key,
-       nickname text not null default '익명의 관객',
-       message text not null,
-       created_at timestamptz default now()
-     );
-     alter table guestbook enable row level security;
-     create policy "read" on guestbook for select using (true);
-     create policy "insert" on guestbook for insert with check (true);
-  3. Settings → API 에서 URL 과 anon key 복사 후 아래 입력
-*/
-const SUPABASE_URL = "";        /* 예: https://xyzxyz.supabase.co  */
-const SUPABASE_ANON_KEY = "";   /* 예: eyJhbGci...                  */
+/* ── Firebase Realtime Database 방명록 설정 ──────────────────── */
+/* firebase.google.com 에서 프로젝트 생성 후 Realtime Database URL 입력 */
+/* 규칙(Rules): { "rules": { "guestbook": { ".read":true, ".write":true } } } */
+const FIREBASE_DB_URL = "https://hwashin-concert-default-rtdb.asia-southeast1.firebasedatabase.app";
