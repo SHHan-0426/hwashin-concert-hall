@@ -196,6 +196,12 @@ section{padding:54px 18px;position:relative;scroll-margin-top:var(--topbar)}
 .hall-card .d{font-size:.82rem;opacity:.82;margin-top:8px}
 .hall-card .enter{margin-top:11px;font-size:.8rem;font-weight:700;color:var(--gold);letter-spacing:.04em}
 
+/* ── 안내판 → 무대 진입 구분선 ─────────────────────────────── */
+.stage-divider{background:var(--ivory);padding:28px 24px 0}
+.sd-inner{display:flex;align-items:center;gap:12px}
+.sd-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.sd-text{font-family:var(--serif);font-size:.8rem;letter-spacing:.2em;color:var(--gold);white-space:nowrap;flex:none}
+
 /* ── 무대(홀) 섹션 ───────────────────────────────────────────── */
 .stage{scroll-margin-top:var(--topbar)}
 .stage.alt{background:linear-gradient(180deg,#efe7d8,#f5f0e8)}

@@ -12,7 +12,7 @@
 const CHANNEL = {
   name: "이든채널 (Eden Ch)",
   handle: "이든채널",
-  url: "https://www.youtube.com/@%EC%9D%B4%EB%93%A0%ED%8B%B8%EC%9D%B4",
+  url: "https://www.youtube.com/@%EC%9D%B4%EB%93%A0%ED%8B%B0%EB%B8%8C%EC%9D%B4",
   playlist: "https://www.youtube.com/playlist?list=PLaO7h8Cdr-HN8XouEC6KCS6LBwv8oh-wS",
   searchBase: "https://www.youtube.com/results?search_query="
 };
