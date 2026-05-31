@@ -173,10 +173,29 @@ const HALLS = {
   conduct:  { no:"무대 4", name:"지휘 홀", sub:"마에스트라", desc:"지휘자 진화신이 이끄는 합창 아카이브", accent:"#1f4d3a" }
 };
 
-/* ── 이달의 무대 (월간 큐레이션) ───────────────────────────── */
+/* ── 이달의 무대 — 자동 선택 (매월 자동 갱신) ─────────────── */
+/* picks 불필요 — 앱이 월간 시드로 자동 2곡 선택            */
 const MONTHLY = {
   month: "2026년 6월",
   theme: "초여름, 빛으로 부르는 노래",
-  comment: "신록의 계절에 어울리는 맑고 청아한 무대를 골랐습니다. 한국 가곡 「님이 오시는지」로 봄의 서정을 느끼고, 모차르트의 「Laudate Dominum」으로 마음을 씻고, 진화신과 강주원의 「향수」 듀엣으로 계절의 그리움을 마무리합니다.",
-  picks: ["님이 오시는지", "Laudate Dominum", "향수"]
+  comment: "신록의 계절, 진화신의 목소리로 초여름을 맞이합니다. 이 달의 두 무대는 매월 자동으로 새로 선정됩니다."
 };
+
+/* ── Supabase 방명록 설정 ───────────────────────────────────── */
+/*
+  방문자 간 방명록 공유를 원하면 아래 두 값을 채우세요.
+  1. https://supabase.com 무료 가입 → 새 프로젝트 생성
+  2. SQL Editor에서 아래 실행:
+     create table guestbook (
+       id bigint generated always as identity primary key,
+       nickname text not null default '익명의 관객',
+       message text not null,
+       created_at timestamptz default now()
+     );
+     alter table guestbook enable row level security;
+     create policy "read" on guestbook for select using (true);
+     create policy "insert" on guestbook for insert with check (true);
+  3. Settings → API 에서 URL 과 anon key 복사 후 아래 입력
+*/
+const SUPABASE_URL = "";        /* 예: https://xyzxyz.supabase.co  */
+const SUPABASE_ANON_KEY = "";   /* 예: eyJhbGci...                  */

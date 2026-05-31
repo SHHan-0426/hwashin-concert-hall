@@ -10,6 +10,29 @@
   const esc = (t) => String(t == null ? "" : t).replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+  /* ---- 시드 난수 (날짜 기반, 결정론적) ---- */
+  /* 같은 날 모든 방문자가 동일한 카드를 보도록 LCG 사용 */
+  function makeRng(seed) {
+    let s = (seed >>> 0) || 1;
+    return function () {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      return s / 4294967296;
+    };
+  }
+  function dateSeed() {
+    const d = new Date();
+    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  }
+  function monthSeed() {
+    const d = new Date();
+    return d.getFullYear() * 100 + (d.getMonth() + 1);
+  }
+  function seededSample(arr, n, seed) {
+    const rng = makeRng(seed >>> 0);
+    const idx = [...arr.keys()].sort(() => rng() - 0.5).slice(0, n);
+    return idx.map((i) => arr[i]);
+  }
+
   /* 영상 카드 1개 → HTML */
   function cardHTML(v, idx) {
     const thumb = v.yt
@@ -117,6 +140,7 @@
     host.innerHTML = html;
 
     /* 각 홀 : 탭 필터 + 전체 보기 */
+    const hallKeys = Object.keys(HALLS);
     Object.keys(HALLS).forEach((key) => {
       const gridEl = $(`#grid-${key}`);
       const expandBtn = $(`#expand-${key}`);
@@ -126,18 +150,33 @@
 
       function updateGrid() {
         const cards = $$(".vcard", gridEl);
-        let shown = 0, total = 0;
+
+        /* 현재 필터에 맞는 카드 목록 */
+        const visible = cards.filter((card) => {
+          const v = VIDEOS[+card.dataset.idx];
+          return (currentFilter === "all" || v.group === currentFilter);
+        });
+        const total = visible.length;
+
+        /* 오늘의 2편 — 날짜 + 홀 인덱스 + 필터 문자열로 시드 */
+        const hallIdx = hallKeys.indexOf(key);
+        const seed = dateSeed() * 10000 + hallIdx * 1000 + currentFilter.length;
+        const todaySet = new Set(
+          seededSample(visible, Math.min(2, total), seed).map((c) => c.dataset.idx)
+        );
+
+        /* 숨김/노출 적용 */
         cards.forEach((card) => {
           const v = VIDEOS[+card.dataset.idx];
           const matches = (currentFilter === "all" || v.group === currentFilter);
           if (!matches) {
             card.hidden = true;
           } else {
-            total++;
-            card.hidden = (!expanded && shown >= 2);
-            if (!card.hidden) shown++;
+            card.hidden = !expanded && !todaySet.has(card.dataset.idx);
           }
         });
+
+        /* 버튼 갱신 */
         if (expandBtn) {
           expandBtn.style.display = total > 2 ? "" : "none";
           expandBtn.textContent = expanded
@@ -168,14 +207,14 @@
     });
   }
 
-  /* ---- 이달의 무대 ---- */
+  /* ---- 이달의 무대 (월간 시드로 자동 2곡 선택) ---- */
   function renderMonthly() {
+    const pool = VIDEOS.filter((v) => v.yt && v.yt.length > 5);
+    const picks = seededSample(pool, 2, monthSeed() * 997 + 137);
+
     $("#m-month").textContent = MONTHLY.month;
     $("#m-theme").textContent = MONTHLY.theme;
     $("#m-comment").textContent = MONTHLY.comment;
-    const picks = MONTHLY.picks
-      .map((t) => VIDEOS.find((v) => v.title.includes(t) || t.includes(v.title)))
-      .filter(Boolean);
     $("#m-grid").innerHTML = picks.map((v) => cardHTML(v, VIDEOS.indexOf(v))).join("");
   }
 
@@ -221,66 +260,163 @@
   modal.addEventListener("click", (e) => { if (e.target === modal) closeVideo(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeVideo(); });
 
-  /* 카드 클릭 위임 */
   document.addEventListener("click", (e) => {
     const card = e.target.closest(".vcard");
     if (card) openVideo(VIDEOS[+card.dataset.idx]);
   });
 
-  /* ---- 방명록 (localStorage v1) ---- */
+  /* ====================================================================
+     방명록 — Supabase 공유 또는 localStorage 로컬 (자동 전환)
+     ==================================================================== */
   const GB_KEY = "hwashin_guestbook_v1";
-  const loadGB = () => { try { return JSON.parse(localStorage.getItem(GB_KEY)) || []; } catch { return []; } };
-  const saveGB = (a) => localStorage.setItem(GB_KEY, JSON.stringify(a));
+  const SB = (typeof SUPABASE_URL !== "undefined" && SUPABASE_URL &&
+              typeof SUPABASE_ANON_KEY !== "undefined" && SUPABASE_ANON_KEY)
+    ? { url: SUPABASE_URL.replace(/\/$/, ""), key: SUPABASE_ANON_KEY }
+    : null;
 
-  function renderGB() {
-    const list = loadGB();
+  /* Supabase REST 호출 헬퍼 */
+  function sbFetch(path, opts) {
+    return fetch(SB.url + path, Object.assign({}, opts, {
+      headers: Object.assign({
+        "apikey": SB.key,
+        "Authorization": "Bearer " + SB.key,
+        "Content-Type": "application/json"
+      }, (opts && opts.headers) || {})
+    }));
+  }
+
+  /* localStorage 로드/저장 */
+  const loadLocal = () => { try { return JSON.parse(localStorage.getItem(GB_KEY)) || []; } catch { return []; } };
+  const saveLocal = (a) => localStorage.setItem(GB_KEY, JSON.stringify(a));
+
+  /* 날짜 포맷 */
+  function fmtDate(val) {
+    const d = val ? new Date(val) : new Date();
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+  }
+
+  /* 방명록 항목 HTML */
+  function gbItemHTML(item, i) {
+    const nick = esc(item.nickname || item.nick || "익명의 관객");
+    const msg = esc(item.message || item.msg || "");
+    const date = esc(item.created_at ? fmtDate(item.created_at) : (item.date || ""));
+    const likes = item.r ? (item.r.like || 0) : 0;
+    const move  = item.r ? (item.r.move  || 0) : 0;
+    const grace = item.r ? (item.r.grace || 0) : 0;
+    return `<div class="gb-item" data-id="${esc(item.id || i)}">
+        <div class="top"><span class="nick">${nick}</span><span class="date">${date}</span></div>
+        <div class="msg">${msg}</div>
+        <div class="react" data-i="${i}">
+          <button data-r="like">👏 <span>${likes}</span></button>
+          <button data-r="move">🥹 <span>${move}</span></button>
+          <button data-r="grace">🙏 <span>${grace}</span></button>
+        </div>
+      </div>`;
+  }
+
+  /* 렌더링 */
+  function renderGB(list) {
     const host = $("#gb-list");
-    if (!list.length) {
+    if (!list || !list.length) {
       host.innerHTML = `<div class="gb-empty">첫 번째 감상을 남겨주세요. 당신의 한 줄이 이 공연장을 채웁니다. ♪</div>`;
       return;
     }
-    host.innerHTML = list.map((g, i) => `<div class="gb-item">
-        <div class="top"><span class="nick">${esc(g.nick)}</span><span class="date">${esc(g.date)}</span></div>
-        <div class="msg">${esc(g.msg)}</div>
-        <div class="react" data-i="${i}">
-          <button data-r="like">👏 <span>${g.r?.like || 0}</span></button>
-          <button data-r="move">🥹 <span>${g.r?.move || 0}</span></button>
-          <button data-r="grace">🙏 <span>${g.r?.grace || 0}</span></button>
-        </div>
-      </div>`).join("");
+    host.innerHTML = list.map((g, i) => gbItemHTML(g, i)).join("");
   }
 
-  $("#gb-form").addEventListener("submit", (e) => {
+  /* 목록 불러오기 */
+  async function loadGB() {
+    if (SB) {
+      try {
+        const r = await sbFetch("/rest/v1/guestbook?select=*&order=created_at.desc&limit=50");
+        if (r.ok) {
+          const items = await r.json();
+          /* 로컬 반응 병합 */
+          const localReacts = JSON.parse(localStorage.getItem("hwashin_gb_reacts") || "{}");
+          items.forEach((it) => { it.r = localReacts[it.id] || { like: 0, move: 0, grace: 0 }; });
+          renderGB(items);
+          return;
+        }
+      } catch (e) { /* fallback */ }
+    }
+    renderGB(loadLocal());
+  }
+
+  /* 새 항목 저장 */
+  async function saveGB(nick, msg) {
+    if (SB) {
+      try {
+        const r = await sbFetch("/rest/v1/guestbook", {
+          method: "POST",
+          headers: { "Prefer": "return=representation" },
+          body: JSON.stringify({ nickname: nick, message: msg })
+        });
+        if (r.ok) {
+          await loadGB();
+          return true;
+        }
+      } catch (e) { /* fallback */ }
+    }
+    /* localStorage 폴백 */
+    const list = loadLocal();
+    list.unshift({ nick, msg, date: fmtDate(), r: { like: 0, move: 0, grace: 0 } });
+    saveLocal(list);
+    renderGB(list);
+    return true;
+  }
+
+  /* 반응 — 항상 로컬 저장 (Supabase 없이도 동작) */
+  function updateReact(i, r) {
+    if (SB) {
+      /* Supabase 모드: 반응을 로컬에 저장 */
+      const items = $$(".gb-item");
+      const id = items[i] && items[i].dataset.id;
+      if (id) {
+        const reacts = JSON.parse(localStorage.getItem("hwashin_gb_reacts") || "{}");
+        reacts[id] = reacts[id] || { like: 0, move: 0, grace: 0 };
+        reacts[id][r] = (reacts[id][r] || 0) + 1;
+        localStorage.setItem("hwashin_gb_reacts", JSON.stringify(reacts));
+        /* 버튼 카운터 바로 갱신 */
+        const btn = items[i].querySelector(`[data-r="${r}"] span`);
+        if (btn) btn.textContent = reacts[id][r];
+      }
+    } else {
+      const list = loadLocal();
+      list[i].r = list[i].r || {};
+      list[i].r[r] = (list[i].r[r] || 0) + 1;
+      saveLocal(list);
+      renderGB(list);
+    }
+  }
+
+  /* 폼 이벤트 */
+  $("#gb-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const nick = $("#gb-nick").value.trim() || "익명의 관객";
     const msg = $("#gb-msg").value.trim();
     if (!msg) { toast("감상 한 줄을 적어주세요."); return; }
-    const d = new Date();
-    const date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
-    const list = loadGB();
-    list.unshift({ nick, msg, date, r: { like: 0, move: 0, grace: 0 } });
-    saveGB(list); renderGB();
+    const btn = e.target.querySelector("button[type=submit]");
+    if (btn) { btn.disabled = true; btn.textContent = "저장 중…"; }
+    await saveGB(nick, msg);
     e.target.reset();
+    if (btn) { btn.disabled = false; btn.textContent = "방명록에 남기기 ♪"; }
     toast("소중한 감상 감사합니다 ♪");
   });
 
   $("#gb-list").addEventListener("click", (e) => {
-    const btn = e.target.closest("button"); if (!btn) return;
-    const i = +btn.closest(".react").dataset.i, r = btn.dataset.r;
-    const list = loadGB();
-    list[i].r = list[i].r || {}; list[i].r[r] = (list[i].r[r] || 0) + 1;
-    saveGB(list); renderGB();
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    const reactEl = btn.closest(".react");
+    if (!reactEl) return;
+    updateReact(+reactEl.dataset.i, btn.dataset.r);
   });
 
   /* 곡 신청 */
-  $("#req-form").addEventListener("submit", (e) => {
+  $("#req-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const song = $("#req-song").value.trim();
     if (!song) return;
-    const list = loadGB();
-    list.unshift({ nick: "🎵 곡 신청", msg: `"${song}" 무대를 듣고 싶어요!`,
-      date: new Date().toLocaleDateString("ko-KR"), r: { like: 0, move: 0, grace: 0 } });
-    saveGB(list); renderGB();
+    await saveGB("🎵 곡 신청", `"${song}" 무대를 듣고 싶어요!`);
     e.target.reset();
     toast("신청이 방명록에 등록되었습니다. 운영자가 확인합니다 ♪");
   });
@@ -317,10 +453,8 @@
   const topbar = $("#topbar");
   window.addEventListener("scroll", () => topbar.classList.toggle("solid", window.scrollY > 40));
 
-  /* 하단 탭바 — 스크롤 위치에 따라 현재 섹션 강조 */
   const tabs = $$("#tabbar a");
   const secOrder = ["top", "halls", "artist", "monthly", "guest"];
-  // data-sec 가 가리키는 섹션 id 와 화면 위치를 비교해 가장 가까운 탭을 활성화
   const secEls = { top: $("#top"), halls: $("#halls"), artist: $("#artist"), monthly: $("#monthly"), guest: $("#guest") };
   function syncTab() {
     const y = window.scrollY + window.innerHeight * 0.35;
@@ -339,5 +473,5 @@
   renderHalls();
   renderMonthly();
   renderPartners();
-  renderGB();
+  loadGB();  /* async — Supabase 또는 localStorage */
 })();
