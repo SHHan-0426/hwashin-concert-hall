@@ -48,7 +48,7 @@ const VIDEOS = [
      ================================================================ */
   { hall:"solo", group:"한국 가곡", title:"동심초", sub:"꽃잎은 하염없이 — 김성태 곡", composer:"김성태", yt:"rOcPo4RtNJM", featured:true },
   { hall:"solo", group:"한국 가곡", title:"목련화", sub:"오 내 사랑 목련화야 — 김동진 곡", composer:"김동진", yt:"myKw35zdS_4", featured:true },
-  { hall:"solo", group:"한국 가곡", title:"목련화 (2)", sub:"소프라노 진화신 · Magnolia", composer:"김동진", yt:"QnlI34RdI-s" },
+  { hall:"solo", group:"한국 가곡", title:"목련화 (2)", sub:"소프라노 진화신 · Magnolia", composer:"김동진", yt:"myKw35zdS_4" },
   { hall:"solo", group:"한국 가곡", title:"님이 오시는지", sub:"물망초 꿈꾸는 — 김규환 곡", composer:"김규환", yt:"t0MWudTk3ZA", featured:true },
   { hall:"solo", group:"한국 가곡", title:"아리아리랑", sub:"ariarirang — 한국 가곡", composer:"", yt:"Dx2O5r-15ZY" },
   { hall:"solo", group:"한국 가곡", title:"아리아리랑 (2)", sub:"소프라노 진화신", composer:"", yt:"kmgPt7ngZqw" },
@@ -65,7 +65,7 @@ const VIDEOS = [
   { hall:"solo", group:"찬송 & 성가", title:"Laudate Dominum (2)", sub:"주님을 찬양하여라 — 다른 버전", composer:"W. A. Mozart", yt:"VPckvv7Uvcc" },
   { hall:"solo", group:"찬송 & 성가", title:"날 오라 하신다", sub:"내 주의 보혈은", composer:"", yt:"KcmKKSmh824" },
   { hall:"solo", group:"찬송 & 성가", title:"내 언제나 주님을 찬미하리니", sub:"성가 독창", composer:"", yt:"a9ol6CEesUk" },
-  { hall:"solo", group:"찬송 & 성가", title:"사랑하리라", sub:"주 여호와여 들어주소서 — 임긍수 곡", composer:"임긍수", yt:"EHnCUSO8BxY" },
+  { hall:"solo", group:"찬송 & 성가", title:"사랑하리라", sub:"주 여호와여 들어주소서 — 임긍수 곡", composer:"임긍수", yt:"2Hvcwk7A9Lw" },
 
   /* ================================================================
      무대 2 | 앙상블 홀 — 듀엣
@@ -96,7 +96,7 @@ const VIDEOS = [
   { hall:"sacred", group:"찬송 독창", title:"내 평생에 가는 길", sub:"소프라노 진화신 독창", composer:"", yt:"wkzYge-rWX8" },
   { hall:"sacred", group:"찬송 독창", title:"날 오라 하신다", sub:"내 주의 보혈은", composer:"", yt:"KcmKKSmh824" },
   { hall:"sacred", group:"찬송 독창", title:"내 언제나 주님을 찬미하리니", sub:"성가 독창", composer:"", yt:"a9ol6CEesUk" },
-  { hall:"sacred", group:"찬송 독창", title:"사랑하리라", sub:"주 여호와여 들어주소서", composer:"임긍수", yt:"EHnCUSO8BxY" },
+  { hall:"sacred", group:"찬송 독창", title:"사랑하리라", sub:"주 여호와여 들어주소서", composer:"임긍수", yt:"2Hvcwk7A9Lw" },
   { hall:"sacred", group:"성가", title:"Laudate Dominum (1)", sub:"주님을 찬양하여라 — 모차르트", composer:"W. A. Mozart", yt:"AhJGNJH1Yp0" },
   { hall:"sacred", group:"성가", title:"Laudate Dominum (2)", sub:"다른 버전 — 모차르트", composer:"W. A. Mozart", yt:"VPckvv7Uvcc" },
   { hall:"sacred", group:"성가", title:"Coronation Mass — Agnus Dei", sub:"모차르트 대관식 미사", composer:"W. A. Mozart", yt:"GiPZJNhptH8" },
@@ -163,6 +163,7 @@ const VIDEOS = [
   { hall:"conduct", group:"예찬 어린이합창단", title:"기도 — 박시연", sub:"예찬 어린이합창단 · 지휘 진화신", composer:"", yt:"tgW6OiLujvg" },
   { hall:"conduct", group:"예찬 어린이합창단", title:"꿈속에서", sub:"예찬 어린이합창단 · 지휘 진화신", composer:"", yt:"DZomYr-rBP0" },
   { hall:"conduct", group:"예찬 어린이합창단", title:"사랑해", sub:"예찬 어린이합창단 · 지휘 진화신", composer:"", yt:"sOxMftOAx2w" }
+  ,{ hall:"conduct", group:"기타 합창", title:"군산 대성중학교 교가", sub:"반주 진화신", composer:"", yt:"Xkqvyg5J8VI" }
 ];
 
 /* ── 홀 메타데이터 ───────────────────────────────────────────── */
