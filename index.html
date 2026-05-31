@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>진화신의 공연장 — Hwashin Jin Concert Hall</title>
+<meta name="description" content="소프라노이자 지휘자인 진화신의 예술 세계를 한 공간에 담은 디지털 공연장. 오페라 아리아, 한국 가곡, 성가, 합창 지휘까지 — 유튜브 이든채널과 연결된 진화신의 무대.">
+<meta property="og:title" content="진화신의 공연장 — Hwashin Jin Concert Hall">
+<meta property="og:description" content="소프라노·지휘자 진화신의 예술 세계를 담은 디지털 공연장. 아리아부터 합창 지휘까지.">
+<meta property="og:type" content="website">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<!-- ── 상단 슬림 바 ───────────────────────────────────────── -->
+<header class="topbar" id="topbar">
+  <a class="brand" href="#top">
+    <span class="mark">♪</span>
+    <span>
+      <span class="ko">진화신의 공연장</span>
+      <span class="en">HWASHIN JIN CONCERT HALL</span>
+    </span>
+  </a>
+  <ul class="desk-menu">
+    <li><a href="#hall-solo">독창 홀</a></li>
+    <li><a href="#hall-ensemble">앙상블 홀</a></li>
+    <li><a href="#hall-sacred">성가 홀</a></li>
+    <li><a href="#hall-conduct">지휘 홀</a></li>
+    <li><a href="#artist">아티스트</a></li>
+    <li><a href="#monthly">이달의 무대</a></li>
+    <li><a href="#guest">방명록</a></li>
+  </ul>
+  <a class="sub-btn" id="ch-sub" href="#" target="_blank" rel="noopener">유튜브 구독</a>
+</header>
+
+<!-- ── 하단 탭바 (모바일 네비) ────────────────────────────── -->
+<nav class="tabbar" id="tabbar">
+  <a href="#top" data-sec="top">
+    <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>로비
+  </a>
+  <a href="#halls" data-sec="halls">
+    <svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg>무대
+  </a>
+  <a href="#artist" data-sec="artist">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>아티스트
+  </a>
+  <a href="#monthly" data-sec="monthly">
+    <svg viewBox="0 0 24 24"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg>이달의 무대
+  </a>
+  <a href="#guest" data-sec="guest">
+    <svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>방명록
+  </a>
+</nav>
+
+<!-- ── 히어로 ─────────────────────────────────────────────── -->
+<section class="hero" id="top">
+  <span class="curtain-l"></span><span class="curtain-r"></span>
+  <div class="inner">
+    <p class="eyebrow">Grand Entrance · 디지털 공연장</p>
+    <h1>한국의 디바, <span class="gold">진화신</span>의 무대에<br>오신 것을 환영합니다</h1>
+    <p class="lead">소프라노이자 지휘자인 진화신의 예술 세계를 한 공간에 담았습니다.
+      오페라 아리아부터 한국 가곡, 영혼의 성가, 그리고 합창 지휘까지 — 네 개의 무대를 천천히 거닐어 보세요.</p>
+    <div class="cta">
+      <a class="btn btn-gold" href="#halls">네 개의 무대 입장 →</a>
+      <a class="btn btn-ghost" href="#artist">진화신을 만나다</a>
+    </div>
+  </div>
+  <div class="scroll-hint">SCROLL ▾</div>
+</section>
+
+<!-- ── 통계 배너 ──────────────────────────────────────────── -->
+<div class="stats">
+  <div class="wrap">
+    <div><div class="num" id="stat-total">0</div><div class="label">무대 위의 영상</div></div>
+    <div><div class="num" id="stat-halls">0</div><div class="label">개의 공연 홀</div></div>
+    <div><div class="num">∞</div><div class="label">언제나 열린 객석</div></div>
+  </div>
+</div>
+
+<!-- ── 오늘의 추천 ────────────────────────────────────────── -->
+<section id="featured">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="tag">Today's Program</span>
+      <h2>오늘의 추천 프로그램</h2>
+      <div class="divider-gold"></div>
+      <p>진화신의 무대 중 지금 가장 권하고 싶은 곡들을 골랐습니다. 카드를 누르면 바로 감상할 수 있습니다.</p>
+    </div>
+    <div class="grid" id="featured-grid"></div>
+  </div>
+</section>
+
+<!-- ── 네 개의 홀 입장 ────────────────────────────────────── -->
+<section id="halls" style="background:linear-gradient(180deg,#efe7d8,#f5f0e8)">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="tag">The Four Halls</span>
+      <h2>네 개의 무대</h2>
+      <div class="divider-gold"></div>
+      <p>공연장 안내판을 따라 원하는 홀로 입장하세요.</p>
+    </div>
+    <div class="halls" id="hall-cards"></div>
+  </div>
+</section>
+
+<!-- ── 각 홀(무대) — 스크립트로 생성 ──────────────────────── -->
+<div id="stages"></div>
+
+<!-- ── 아티스트 룸 ────────────────────────────────────────── -->
+<section class="artist" id="artist">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="tag">Artist Room</span>
+      <h2>진화신을 만나다</h2>
+      <div class="divider-gold"></div>
+    </div>
+    <div class="artist-body">
+      <div class="artist-portrait">
+        <span class="ph">진화신<br>Soprano &amp; Maestra<br><br>♪<br><br><small style="font-size:.8rem;opacity:.7">아티스트 사진을<br>이곳에 넣어주세요</small></span>
+      </div>
+      <div class="artist-text">
+        <h3>소프라노 · 지휘자 진화신</h3>
+        <div class="role">Soprano &amp; Choral Conductor</div>
+        <p>맑고 깊은 음색의 소프라노 진화신은 오페라 무대의 화려한 아리아부터 한국 가곡의 서정, 그리고 마음을 울리는 성가까지 폭넓은 레퍼토리를 노래해 왔습니다.</p>
+        <p>독창가로서의 활동과 더불어, 연못골찬양대·예찬 어린이합창단·산내들부부합창단을 이끄는 <b style="color:#fff">지휘자(마에스트라)</b>로서도 무대를 만들어 왔습니다. 노래하는 사람이자 노래를 빚어내는 사람 — 그 두 얼굴이 이 공연장 안에 함께 담겨 있습니다.</p>
+        <div class="reps">
+          <span>오페라 아리아</span><span>한국 가곡</span><span>성가·찬송</span><span>합창 지휘</span>
+        </div>
+        <div class="partner-row">
+          <div class="lbl">함께한 아티스트</div>
+          <div class="ppl" id="partners"></div>
+        </div>
+        <a class="btn btn-gold" id="artist-sub" href="#" target="_blank" rel="noopener" style="margin-top:22px">▶ 유튜브 이든채널 구독하기</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 이달의 무대 ────────────────────────────────────────── -->
+<section class="monthly" id="monthly">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="tag">Stage of the Month</span>
+      <h2>이달의 무대</h2>
+      <div class="divider-gold"></div>
+    </div>
+    <div class="panel">
+      <div class="mlabel" id="m-month">이달</div>
+      <h3 id="m-theme">테마</h3>
+      <p class="cmt" id="m-comment"></p>
+      <div class="grid" id="m-grid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 방명록 & 소통 ──────────────────────────────────────── -->
+<section class="guest" id="guest">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="tag">Guestbook &amp; Lounge</span>
+      <h2>방명록 &amp; 소통 공간</h2>
+      <div class="divider-gold"></div>
+      <p>감상을 남기고, 듣고 싶은 곡을 신청하고, 이 공연장을 친구에게 전해 주세요.</p>
+    </div>
+    <div class="guest-grid">
+      <div>
+        <form class="gb-form" id="gb-form">
+          <h3>감상 한 줄 남기기</h3>
+          <label for="gb-nick">닉네임</label>
+          <input id="gb-nick" type="text" maxlength="20" placeholder="예: 음악을 사랑하는 객석">
+          <label for="gb-msg">감상</label>
+          <textarea id="gb-msg" rows="3" maxlength="300" placeholder="진화신의 무대를 보고 느낀 점을 적어주세요"></textarea>
+          <button class="btn btn-gold" type="submit">방명록에 남기기 ♪</button>
+        </form>
+
+        <form class="gb-form" id="req-form" style="margin-top:20px">
+          <h3>듣고 싶은 곡 신청</h3>
+          <label for="req-song">곡명</label>
+          <input id="req-song" type="text" maxlength="60" placeholder="예: 그리운 금강산 무대가 보고 싶어요">
+          <button class="btn btn-gold" type="submit">곡 신청하기</button>
+        </form>
+
+        <div class="share-row" id="share-row">
+          <button data-share="kakao">💬 카카오톡</button>
+          <button data-share="fb">f 페이스북</button>
+          <button data-share="x">𝕏 트위터</button>
+          <button data-share="copy">🔗 링크 복사</button>
+        </div>
+      </div>
+      <div>
+        <div class="gb-list" id="gb-list"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 푸터 ───────────────────────────────────────────────── -->
+<footer class="foot">
+  <div class="mark">♪ 진화신의 공연장</div>
+  <div class="en">HWASHIN JIN CONCERT HALL</div>
+  <div>소프라노 · 지휘자 진화신의 디지털 공연장</div>
+  <a class="yt" id="foot-sub" href="#" target="_blank" rel="noopener">유튜브 이든채널 (@이든티브이) 바로가기 →</a>
+  <div class="copy">이 공연장의 모든 영상은 유튜브 이든채널에서 제공됩니다. · © 진화신의 공연장</div>
+</footer>
+
+<!-- ── 모달 플레이어 ──────────────────────────────────────── -->
+<div class="modal" id="modal" aria-hidden="true">
+  <div class="box">
+    <button class="close" id="modal-close" aria-label="닫기">×</button>
+    <div class="vid" id="modal-vid"></div>
+    <div class="meta">
+      <div>
+        <h4 id="modal-title"></h4>
+        <div class="s" id="modal-sub"></div>
+      </div>
+      <a class="yt-link" id="modal-yt" href="#" target="_blank" rel="noopener">유튜브에서 댓글 달기 →</a>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+  /* 채널 구독 링크 일괄 연결 */
+  ["ch-sub","artist-sub","foot-sub"].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.href=CHANNEL.url;
+  });
+</script>
+</body>
+</html>
